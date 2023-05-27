@@ -3,4 +3,5 @@ idf_component_register(SRCS
     "esp_now_msg.cpp"
     "motor_control.cpp"
     "encoder.cpp"
+    "imu.cpp"
     INCLUDE_DIRS ".")
