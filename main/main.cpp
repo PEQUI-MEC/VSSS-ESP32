@@ -14,7 +14,9 @@
 #include "esp_system.h"
 #include "esp_now.h"
 #include "esp_crc.h"
+
 #include "esp_now_msg.h"
+#include "motor_control.h"
 
 void send_back_task(void * args) {
     while (true) {
@@ -41,4 +43,14 @@ extern "C" void app_main() {
     setup_wifi();
     setup_espnow();
     xTaskCreate(send_back_task, "send_back_task", 20480, NULL, 4, NULL);
+
+    MotorControl motor_control_1(MCPWM_UNIT_0, 32, 33);
+    motor_control_1.set_duty_cycle(40);
+
+    MotorControl motor_control_2(MCPWM_UNIT_1, 19, 18);
+    motor_control_2.set_duty_cycle(40);
+
+    while (true) {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
 }
