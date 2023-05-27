@@ -17,6 +17,7 @@
 
 #include "esp_now_msg.h"
 #include "motor_control.h"
+#include "encoder.h"
 
 void send_back_task(void * args) {
     while (true) {
@@ -44,13 +45,29 @@ extern "C" void app_main() {
     setup_espnow();
     xTaskCreate(send_back_task, "send_back_task", 20480, NULL, 4, NULL);
 
-    MotorControl motor_control_1(MCPWM_UNIT_0, 32, 33);
-    motor_control_1.set_duty_cycle(40);
+    // MotorControl motor_control_1(MCPWM_UNIT_0, 32, 33);
+    // motor_control_1.set_duty_cycle(40);
 
     MotorControl motor_control_2(MCPWM_UNIT_1, 19, 18);
     motor_control_2.set_duty_cycle(40);
 
+    // Encoder encoder_1(PCNT_UNIT_0, 25, 26);
+
+    Encoder encoder_2(PCNT_UNIT_1, 5, 17);
+
+    int count = 0;
+
     while (true) {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        // alternate between set_duty_cycle 40 and -40 each 5 seconds
+        if (count % 50 == 0) {
+            // motor_control_1.set_duty_cycle(-40);
+            motor_control_2.set_duty_cycle(-40);
+        } else if (count % 50 == 25) {
+            // motor_control_1.set_duty_cycle(40);
+            motor_control_2.set_duty_cycle(40);
+        }
+        printf("count: %d\n", encoder_2.get_count());
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        count++;
     }
 }
