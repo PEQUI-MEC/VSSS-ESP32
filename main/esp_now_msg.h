@@ -41,6 +41,7 @@ void setup_wifi();
 void setup_espnow();
 void add_peer(std::array<uint8_t, ESP_NOW_ETH_ALEN>& mac);
 void send_msg(std::array<uint8_t, ESP_NOW_ETH_ALEN>& mac, std::array<uint8_t, MAX_RECEIVE_DATA>& data, int len);
+void send_string_msg(std::array<uint8_t, ESP_NOW_ETH_ALEN>& mac, std::string& data);
 void read_msg_queue(MessagePacket& packet);
 
 #endif

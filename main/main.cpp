@@ -61,12 +61,13 @@ extern "C" void app_main() {
         // alternate between set_duty_cycle 40 and -40 each 5 seconds
         if (count % 50 == 0) {
             // motor_control_1.set_duty_cycle(-40);
-            motor_control_2.set_duty_cycle(-40);
+            motor_control_2.set_duty_cycle(-20);
         } else if (count % 50 == 25) {
             // motor_control_1.set_duty_cycle(40);
-            motor_control_2.set_duty_cycle(40);
+            motor_control_2.set_duty_cycle(20);
         }
-        printf("count: %d\n", encoder_2.get_count());
+        std::string msg = "count: " + std::to_string(encoder_2.get_count()) + "\n";
+        send_string_msg(BROADCAST_MAC, msg);
         vTaskDelay(100 / portTICK_PERIOD_MS);
         count++;
     }

@@ -38,6 +38,12 @@ void send_msg(std::array<uint8_t, ESP_NOW_ETH_ALEN>& mac, std::array<uint8_t, MA
     ESP_ERROR_CHECK(esp_now_send(mac.data(), data.data(), len));
 }
 
+void send_string_msg(std::array<uint8_t, ESP_NOW_ETH_ALEN>& mac, std::string& data) {
+    std::array<uint8_t, MAX_RECEIVE_DATA> data_array;
+    std::copy(data.begin(), data.end(), data_array.begin());
+    send_msg(mac, data_array, data.length());
+}
+
 void read_msg_queue(MessagePacket& packet) {
     if (xQueueReceive(packet_queue, &packet, portMAX_DELAY) != pdTRUE) {
         ESP_LOGW(TAG, "Receive queue fail");
