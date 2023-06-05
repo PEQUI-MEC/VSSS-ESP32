@@ -32,3 +32,20 @@ void MotorControl::set_duty_cycle(float duty_cycle) {
         mcpwm_set_duty_type(mcpwm_unit, MOTOR_CTRL_MCPWM_TIMER, MCPWM_OPR_A, MCPWM_DUTY_MODE_0); //call this each time, if operator was previously in low/high state
     }
 }
+
+void MotorControl::set_pid_target_velocity(float target_velocity) {
+    if (pid.target_velocity != target_velocity) {
+        pid.error_sum = 0;
+        pid.prev_error = 0;
+    }
+    pid.target_velocity = target_velocity;
+}
+
+void MotorControl::update_pid(float current_velocity) {
+    float error = pid.target_velocity - current_velocity;
+    pid.error_sum = pid.error_sum + error;
+    float error_diff = error - pid.prev_error;
+    pid.prev_error = error;
+    float duty_cycle = pid.kp * error + pid.ki * pid.error_sum + pid.kd * error_diff;
+    set_duty_cycle(duty_cycle);
+}

@@ -1,4 +1,5 @@
 #include "encoder.h"
+#include "math.h"
 
 static bool is_pcnt_isr_service_installed = false;
 
@@ -59,6 +60,16 @@ Encoder::Encoder(pcnt_unit_t pcnt_unit, uint8_t pin_a, uint8_t pin_b) : pcnt_uni
 
 int Encoder::get_count() {
     int16_t count;
-    pcnt_get_counter_value(PCNT_UNIT_0, &count);
+    pcnt_get_counter_value(pcnt_unit, &count);
     return count + accumu_count;
+}
+
+float Encoder::get_velocity() {
+    return velocity;
+}
+
+void Encoder::update_velocity(int period) {
+    velocity = (float(get_count()) * 2 * M_PI * WHEEL_RADIUS) / (PULSES_PER_REVOLUTION * GEAR_RATIO * period);
+    accumu_count = 0;
+    pcnt_counter_clear(pcnt_unit);
 }
