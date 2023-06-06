@@ -144,17 +144,21 @@ extern "C" void app_main() {
 
     int count = 0;
 
+    // correçao para os motores "ruins"
+    float target = -10;
+    float correction = 0.88;
+    
     while (true) {
         if (count % 50 == 0) {
             // motor_control_1.set_duty_cycle(-20);
             // motor_control_2.set_duty_cycle(20);
-            motor_control_1.set_pid_target_velocity(-0.5);
-            motor_control_2.set_pid_target_velocity(0.5);
+            motor_control_1.set_pid_target_velocity(-target*correction);
+            motor_control_2.set_pid_target_velocity(target);
         } else if (count % 50 == 25) {
             // motor_control_1.set_duty_cycle(20);
             // motor_control_2.set_duty_cycle(-20);
-            motor_control_1.set_pid_target_velocity(0.5);
-            motor_control_2.set_pid_target_velocity(-0.5);
+            motor_control_1.set_pid_target_velocity(target*correction);
+            motor_control_2.set_pid_target_velocity(-target);
         }
 
         // motor_control_1.set_pid_target_velocity(2);
@@ -162,8 +166,8 @@ extern "C" void app_main() {
         // std::string msg = "encoder_1: " + std::to_string(encoder_1_->get_velocity()) + " encoder_2: " + std::to_string(encoder_2_->get_velocity());
         // send_string_msg(BROADCAST_MAC, msg);
 
-        std::string msg = "encoder_1: " + std::to_string(encoder_1.get_count()) + " encoder_2: " + std::to_string(encoder_2.get_count());
-        send_string_msg(BROADCAST_MAC, msg);
+        // std::string msg = "encoder_1: " + std::to_string(encoder_1.get_count()) + " encoder_2: " + std::to_string(encoder_2.get_count());
+        // send_string_msg(BROADCAST_MAC, msg);
         
         // std::string msg = "encoder_1: " + std::to_string(encoder_1.get_velocity()) + " encoder_2: " + std::to_string(encoder_2.get_velocity());
         // send_string_msg(BROADCAST_MAC, msg);
