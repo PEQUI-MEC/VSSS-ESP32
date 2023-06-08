@@ -14,11 +14,12 @@
 #include "esp_system.h"
 #include "esp_now.h"
 #include "esp_crc.h"
-
 #include "esp_now_msg.h"
 #include "motor_control.h"
 #include "encoder.h"
 #include "imu.h"
+
+extern std::string msg;
 
 void send_back_task(void * args) {
     while (true) {
@@ -58,6 +59,7 @@ extern "C" void app_main() {
     IMU imu(I2C_NUM_0, 21, 22);
 
     int count = 0;
+    std::string msg;
 
     while (true) {
         if (count % 50 == 0) {
@@ -68,7 +70,8 @@ extern "C" void app_main() {
             motor_control_2.set_duty_cycle(-20);
         }
         // std::string msg = "encoder_1: " + std::to_string(encoder_1.get_count()) + " encoder_2: " + std::to_string(encoder_2.get_count());
-        // send_string_msg(BROADCAST_MAC, msg);
+        
+        send_string_msg(BROADCAST_MAC, msg);
         // ImuData imu_data = imu.get_data();
         // send gyro components
         // std::string gyro_msg = std::to_string(imu_data.gyro[0]) + "\t" + std::to_string(imu_data.gyro[1]) + "\t" + std::to_string(imu_data.gyro[2]);
