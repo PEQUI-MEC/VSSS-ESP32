@@ -4,5 +4,4 @@ idf_component_register(SRCS
     "motor_control.cpp"
     "encoder.cpp"
     "imu.cpp"
-    "serial.cpp"
     INCLUDE_DIRS ".")

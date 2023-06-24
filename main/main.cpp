@@ -6,6 +6,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/timers.h"
+#include "freertos/task.h"
+#include "driver/uart.h"
+#include "string.h"
 #include "nvs_flash.h"
 #include "esp_event.h"
 #include "esp_netif.h"
@@ -19,17 +22,8 @@
 #include "encoder.h"
 #include "imu.h"
 
-extern std::string msg;
+#define BUF_SIZE (1024)
 
-void send_back_task(void * args) {
-    while (true) {
-        MessagePacket packet;
-        read_msg_queue(packet);
-        // log bytes received
-        add_peer(packet.mac_addr);
-        send_msg(packet.mac_addr, packet.data, packet.data_len);
-    }
-}
 
 void flash_init() {
     // Initialize NVS
@@ -41,42 +35,52 @@ void flash_init() {
     ESP_ERROR_CHECK(ret);
 }
 
+void uart_task(void *arg)
+{
+    std::string msg;
+    uint8_t* data = (uint8_t*) malloc(BUF_SIZE);
+    while (1) {
+        // Wait for data to be received
+        int len = uart_read_bytes(UART_NUM_0, data, BUF_SIZE, 1000 / portTICK_PERIOD_MS);
+
+        if (len > 0) {
+            // Process received data
+            data[len] = 0; // Null-terminate the received data
+            msg = std::string(reinterpret_cast<char*>(data));
+            send_string_msg(BROADCAST_MAC ,msg);
+        }
+
+        // Send data
+        // const char* send_data = "Hello, world!";
+        // uart_write_bytes(UART_NUM_0, send_data, strlen(send_data));
+       // printf("Sent data: %s\n", send_data);
+
+
+
+        vTaskDelay(1000 / portTICK_PERIOD_MS); // Wait for 1 second
+    }
+}
+
 extern "C" void app_main() {
     flash_init();
     setup_wifi();
     setup_espnow();
-    xTaskCreate(send_back_task, "send_back_task", 20480, NULL, 4, NULL);
 
-    MotorControl motor_control_1(MCPWM_UNIT_0, 32, 33);
-    // motor_control_1.set_duty_cycle(40);
+    // Configure UART port
+    uart_config_t uart_config = {
+        .baud_rate = 115200,
+        .data_bits = UART_DATA_8_BITS,
+        .parity = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE
+    };
 
-    MotorControl motor_control_2(MCPWM_UNIT_1, 19, 18);
-    // motor_control_2.set_duty_cycle(40);
+    uart_param_config(UART_NUM_0, &uart_config);
+    uart_set_pin(UART_NUM_0, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    uart_driver_install(UART_NUM_0, BUF_SIZE * 2, 0, 0, NULL, 0);
 
-    Encoder encoder_1(PCNT_UNIT_0, 25, 26);
-    Encoder encoder_2(PCNT_UNIT_1, 5, 17);
+    // Start UART task
+    xTaskCreate(uart_task, "uart_task", 4096, NULL, 10, NULL);
 
-    IMU imu(I2C_NUM_0, 21, 22);
-
-    int count = 0;
-    std::string msg;
-
-    while (true) {
-        if (count % 50 == 0) {
-            motor_control_1.set_duty_cycle(-20);
-            motor_control_2.set_duty_cycle(20);
-        } else if (count % 50 == 25) {
-            motor_control_1.set_duty_cycle(20);
-            motor_control_2.set_duty_cycle(-20);
-        }
-        // std::string msg = "encoder_1: " + std::to_string(encoder_1.get_count()) + " encoder_2: " + std::to_string(encoder_2.get_count());
-        
-        send_string_msg(BROADCAST_MAC, msg);
-        // ImuData imu_data = imu.get_data();
-        // send gyro components
-        // std::string gyro_msg = std::to_string(imu_data.gyro[0]) + "\t" + std::to_string(imu_data.gyro[1]) + "\t" + std::to_string(imu_data.gyro[2]);
-        // send_string_msg(BROADCAST_MAC, gyro_msg);
-        vTaskDelay(50 / portTICK_PERIOD_MS);
-        count++;
-    }
 }
+
