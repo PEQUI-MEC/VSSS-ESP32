@@ -22,6 +22,8 @@
 #include "driver/timer.h"
 #include "freertos/timers.h"
 
+#include "math.h"
+
 // static xQueueHandle encoder_queue;
 
 // struct EncoderPacket {
@@ -101,10 +103,26 @@ Encoder * encoder_2_;
 MotorControl * motor_control_1_;
 MotorControl * motor_control_2_;
 
-
+int64_t last_time_us = 0;
 void timer_callback(TimerHandle_t xTimer) {
-    encoder_1_->update_velocity(10);
-    encoder_2_->update_velocity(10);
+    // encoder_1_->update_velocity(10);
+    // encoder_2_->update_velocity(10);
+    // motor_control_1_->update_pid(encoder_1_->get_velocity());
+    // motor_control_2_->update_pid(encoder_2_->get_velocity());
+    // int count = encoder_1_->get_count();
+    // float angle = (float(count) *360) / (Encoder::PULSES_PER_REVOLUTION * Encoder::GEAR_RATIO);
+    // std::string msg = "angle: " + std::to_string(angle);
+    // int count2 = encoder_2_->get_count();
+    // float angle2 = (float(count2) *360) / (Encoder::PULSES_PER_REVOLUTION * Encoder::GEAR_RATIO);
+    // msg += " angle2: " + std::to_string(angle2);
+    // send_string_msg(BROADCAST_MAC, msg);
+    struct timeval tv_now;
+    gettimeofday(&tv_now, NULL);
+    int64_t time_us = (int64_t)tv_now.tv_sec * 1000000L + (int64_t)tv_now.tv_usec;
+    float dt_s = (time_us - last_time_us) / 1000000.0;
+    last_time_us = time_us;
+    encoder_1_->update_velocity(dt_s);
+    encoder_2_->update_velocity(dt_s);
     motor_control_1_->update_pid(encoder_1_->get_velocity());
     motor_control_2_->update_pid(encoder_2_->get_velocity());
 }
@@ -145,26 +163,31 @@ extern "C" void app_main() {
     int count = 0;
 
     // correçao para os motores "ruins"
-    float target = -10;
-    float correction = 0.88;
+    // float target = 0.5;
+    // float correction = 0.88;
     
     while (true) {
-        if (count % 50 == 0) {
-            // motor_control_1.set_duty_cycle(-20);
-            // motor_control_2.set_duty_cycle(20);
-            motor_control_1.set_pid_target_velocity(-target*correction);
-            motor_control_2.set_pid_target_velocity(target);
-        } else if (count % 50 == 25) {
-            // motor_control_1.set_duty_cycle(20);
-            // motor_control_2.set_duty_cycle(-20);
-            motor_control_1.set_pid_target_velocity(target*correction);
-            motor_control_2.set_pid_target_velocity(-target);
-        }
+        // if (count % 50 == 0) {
+        //     // motor_control_1.set_duty_cycle(-20);
+        //     // motor_control_2.set_duty_cycle(20);
+        //     motor_control_1.set_pid_target_velocity(-target);
+        //     motor_control_2.set_pid_target_velocity(target);
+        // } else if (count % 50 == 25) {
+        //     // motor_control_1.set_duty_cycle(20);
+        //     // motor_control_2.set_duty_cycle(-20);
+        //     motor_control_1.set_pid_target_velocity(target);
+        //     motor_control_2.set_pid_target_velocity(-target);
+        // }
+
+        float target = 0.8;
+        motor_control_1.set_pid_target_velocity(target);
+        motor_control_2.set_pid_target_velocity(-target);
 
         // motor_control_1.set_pid_target_velocity(2);
         // motor_control_2.set_pid_target_velocity(2);
-        // std::string msg = "encoder_1: " + std::to_string(encoder_1_->get_velocity()) + " encoder_2: " + std::to_string(encoder_2_->get_velocity());
-        // send_string_msg(BROADCAST_MAC, msg);
+        std::string msg = "encoder_1: " + std::to_string(encoder_1_->get_velocity()) + " encoder_2: " + std::to_string(encoder_2_->get_velocity());
+        // std::string msg = "encoder_1: " + std::to_string(motor_control_1.debug_var) + " encoder_2: " + std::to_string(motor_control_2.debug_var);
+        send_string_msg(BROADCAST_MAC, msg);
 
         // std::string msg = "encoder_1: " + std::to_string(encoder_1.get_count()) + " encoder_2: " + std::to_string(encoder_2.get_count());
         // send_string_msg(BROADCAST_MAC, msg);

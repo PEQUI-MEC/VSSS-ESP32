@@ -68,7 +68,7 @@ float Encoder::get_velocity() {
     return velocity;
 }
 
-void Encoder::update_velocity(int period) {
+void Encoder::update_velocity(float period) {
     velocity = (float(get_count()) * 2 * M_PI * WHEEL_RADIUS) / (PULSES_PER_REVOLUTION * GEAR_RATIO * period);
     accumu_count = 0;
     pcnt_counter_clear(pcnt_unit);
