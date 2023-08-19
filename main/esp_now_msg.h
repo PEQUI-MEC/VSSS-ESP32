@@ -17,6 +17,7 @@
 #include "esp_now.h"
 #include "esp_crc.h"
 #include <array>
+#include <unordered_map>
 
 #define ESPNOW_MAXDELAY 512
 #define MAX_RECEIVE_DATA 250
@@ -30,6 +31,15 @@
 static const char *TAG = "VSSS-ESP32";
 
 static std::array<uint8_t, ESP_NOW_ETH_ALEN> BROADCAST_MAC = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+//Unordered hashmap for the mac of robots A, B and C
+static std::unordered_map<std::string, std::array<uint8_t, ESP_NOW_ETH_ALEN>> ROBOT_MACS = {
+    {"A", {0x70, 0xB8, 0xF6, 0x5B, 0xF7, 0xC1}},
+    {"B", {0x30, 0xAE, 0xA4, 0x1C, 0x6C, 0x9D}},
+    {"C", {0x30, 0xAE, 0xA4, 0x1C, 0x6C, 0x9E}}
+};
+
+
 
 typedef struct {
     std::array<uint8_t, ESP_NOW_ETH_ALEN> mac_addr;

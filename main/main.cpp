@@ -21,6 +21,7 @@
 #include "motor_control.h"
 #include "encoder.h"
 #include "imu.h"
+#include <algorithm>
 
 #define BUF_SIZE (1024)
 
@@ -47,7 +48,27 @@ void uart_task(void *arg)
             // Process received data
             data[len] = 0; // Null-terminate the received data
             msg = std::string(reinterpret_cast<char*>(data));
-            send_string_msg(BROADCAST_MAC ,msg);
+            //remove \n from msg
+            msg.erase(std::remove(msg.begin(), msg.end(), '\n'), msg.end());
+            printf("Received data: %s\n", msg.c_str());
+            //msg = A@0.3;0.4,C@0.5
+            while(1){
+                std::string robot = msg.substr(0,1);
+                std::string data = msg.substr(2, msg.find(',')-2);
+                
+                printf("Robot: %s\n", robot.c_str());
+                printf("Data: %s\n", data.c_str());
+                //print mac robot from hashmap
+                printf("Robot MAC: ");
+                for(int i = 0; i < ESP_NOW_ETH_ALEN; i++){
+                    printf("%02X:", ROBOT_MACS[robot][i]);
+                }
+                printf("\n");
+
+                send_string_msg(ROBOT_MACS[robot], data);
+                if(msg.find(',') == std::string::npos) break;
+                msg = msg.substr(msg.find(",")+1, msg.length());
+    }
         }
 
         // Send data
@@ -79,8 +100,12 @@ extern "C" void app_main() {
     uart_set_pin(UART_NUM_0, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     uart_driver_install(UART_NUM_0, BUF_SIZE * 2, 0, 0, NULL, 0);
 
+    //Add peer to all robots
+    for(auto& robot : ROBOT_MACS){
+        add_peer(robot.second);
+    }
+
     // Start UART task
     xTaskCreate(uart_task, "uart_task", 4096, NULL, 10, NULL);
-
 }
 
