@@ -41,15 +41,18 @@
 //     }
 // }
 
-void send_back_task(void * args) {
-    while (true) {
-        MessagePacket packet;
-        read_msg_queue(packet);
-        // log bytes received
-        add_peer(packet.mac_addr);
-        send_msg(packet.mac_addr, packet.data, packet.data_len);
-    }
-}
+//void send_back_task(void * args) {
+//    while (true) {
+//        MessagePacket packet;
+//        read_msg_queue(packet);
+//        // log bytes received
+//        packet.data[packet.data_len] = '\0';
+//        printf("%s\n", std::string(packet.data.begin(), packet.data.begin()+packet.data_len).c_str());
+//        add_peer(packet.mac_addr);
+//        send_msg(packet.mac_addr, packet.data, packet.data_len);
+//    }
+//}
+
 
 void flash_init() {
     // Initialize NVS
@@ -103,6 +106,40 @@ Encoder * encoder_2_;
 MotorControl * motor_control_1_;
 MotorControl * motor_control_2_;
 
+float get_token(std::string &msg)
+{
+        size_t delim_pos = msg.find(';');
+        float value = std::stof(msg.substr(0,delim_pos));
+        msg = msg.substr(delim_pos+1);
+        return value;
+}
+
+void parse_message(void * args) {
+    while (true) {
+        MessagePacket packet;
+        read_msg_queue(packet);
+
+        packet.data[packet.data_len] = '\0';
+        std::string text(packet.data.begin(), packet.data.begin() + packet.data_len);
+
+        printf("Packet = %s\n",text.c_str());
+        if(packet.data[0] == 'W')
+        {
+            printf("Here1\n");
+            std::string text(packet.data.begin()+1, packet.data.begin() + packet.data_len);
+            printf("Here2\n");
+            float left = get_token(text);
+            printf("Here3\n");
+            float right = get_token(text);
+            printf("Here4\n");
+            motor_control_1_->set_pid_target_velocity(left);
+            printf("Here5\n");
+            motor_control_2_->set_pid_target_velocity(right);
+            printf("Here6\n");
+        }
+    }
+}
+
 int64_t last_time_us = 0;
 void timer_callback(TimerHandle_t xTimer) {
     // encoder_1_->update_velocity(10);
@@ -131,7 +168,8 @@ extern "C" void app_main() {
     flash_init();
     setup_wifi();
     setup_espnow();
-    xTaskCreate(send_back_task, "send_back_task", 20480, NULL, 4, NULL);
+    //xTaskCreate(send_back_task, "send_back_task", 20480, NULL, 4, NULL);
+    xTaskCreate(parse_message, "parse_message", 20480, NULL, 4, NULL);
 
     MotorControl motor_control_1(MCPWM_UNIT_0, 32, 33);
     motor_control_1.set_duty_cycle(0);
@@ -178,10 +216,6 @@ extern "C" void app_main() {
         //     motor_control_1.set_pid_target_velocity(target);
         //     motor_control_2.set_pid_target_velocity(-target);
         // }
-
-        float target = 0.8;
-        motor_control_1.set_pid_target_velocity(target);
-        motor_control_2.set_pid_target_velocity(-target);
 
         // motor_control_1.set_pid_target_velocity(2);
         // motor_control_2.set_pid_target_velocity(2);
