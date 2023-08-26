@@ -111,7 +111,7 @@ float get_token(std::string &msg)
     // Find <;> or <end of string> position
     size_t delim_pos = msg.find(';');
     // Get token from substring
-    std:string token = msg.substr(0,delim_pos);
+    std::string token = msg.substr(0,delim_pos);
     // Update msg to delete consumed token
     msg = msg.substr(delim_pos+1);
 
@@ -130,6 +130,7 @@ void parse_message(void * args) {
         // Create C++ string from byte array
         std::string text(packet.data.begin(), packet.data.begin() + packet.data_len);
 
+        printf("Packet = %s\n",text.c_str());
         if(packet.data[0] == 'W')
         {
             // TODO: think of a better way to read the first character
