@@ -108,10 +108,14 @@ MotorControl * motor_control_2_;
 
 float get_token(std::string &msg)
 {
-        size_t delim_pos = msg.find(';');
-        float value = std::stof(msg.substr(0,delim_pos));
-        msg = msg.substr(delim_pos+1);
-        return value;
+    // Find <;> or <end of string> position
+    size_t delim_pos = msg.find(';');
+    // Get Float value from substring
+    float value = std::stof(msg.substr(0,delim_pos));
+    // Update msg to delete consumed token
+    msg = msg.substr(delim_pos+1);
+
+    return value;
 }
 
 void parse_message(void * args) {
@@ -119,23 +123,19 @@ void parse_message(void * args) {
         MessagePacket packet;
         read_msg_queue(packet);
 
+        // Set last byte to 0 to be sure it is a null terminated string
         packet.data[packet.data_len] = '\0';
         std::string text(packet.data.begin(), packet.data.begin() + packet.data_len);
 
-        printf("Packet = %s\n",text.c_str());
+        //printf("Packet = %s\n",text.c_str());
         if(packet.data[0] == 'W')
         {
-            printf("Here1\n");
+            // TODO: think of a better way to read the first character
             std::string text(packet.data.begin()+1, packet.data.begin() + packet.data_len);
-            printf("Here2\n");
             float left = get_token(text);
-            printf("Here3\n");
             float right = get_token(text);
-            printf("Here4\n");
             motor_control_1_->set_pid_target_velocity(left);
-            printf("Here5\n");
             motor_control_2_->set_pid_target_velocity(right);
-            printf("Here6\n");
         }
     }
 }
