@@ -130,7 +130,9 @@ void parse_message(void * args) {
         // Create C++ string from byte array
         std::string text(packet.data.begin(), packet.data.begin() + packet.data_len);
 
+        // Debug print to console
         printf("Packet = %s\n",text.c_str());
+
         if(packet.data[0] == 'W')
         {
             // TODO: think of a better way to read the first character
@@ -222,9 +224,9 @@ extern "C" void app_main() {
 
         // motor_control_1.set_pid_target_velocity(2);
         // motor_control_2.set_pid_target_velocity(2);
-        std::string msg = "encoder_1: " + std::to_string(encoder_1_->get_velocity()) + " encoder_2: " + std::to_string(encoder_2_->get_velocity());
+        //std::string msg = "encoder_1: " + std::to_string(encoder_1_->get_velocity()) + " encoder_2: " + std::to_string(encoder_2_->get_velocity());
         // std::string msg = "encoder_1: " + std::to_string(motor_control_1.debug_var) + " encoder_2: " + std::to_string(motor_control_2.debug_var);
-        send_string_msg(BROADCAST_MAC, msg);
+        //send_string_msg(BROADCAST_MAC, msg);
 
         // std::string msg = "encoder_1: " + std::to_string(encoder_1.get_count()) + " encoder_2: " + std::to_string(encoder_2.get_count());
         // send_string_msg(BROADCAST_MAC, msg);
