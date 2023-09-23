@@ -24,6 +24,8 @@
 
 #include "math.h"
 
+#include "UKF.h"
+
 // static xQueueHandle encoder_queue;
 
 // struct EncoderPacket {
@@ -105,6 +107,8 @@ Encoder * encoder_1_;
 Encoder * encoder_2_;
 MotorControl * motor_control_1_;
 MotorControl * motor_control_2_;
+IMU * imu_;
+UKF * ukf_;
 
 float get_token(std::string &msg)
 {
@@ -142,6 +146,7 @@ void parse_message(void * args) {
             motor_control_1_->set_pid_target_velocity(left);
             motor_control_2_->set_pid_target_velocity(right);
         }
+        vTaskDelay(1);
     }
 }
 
@@ -169,6 +174,58 @@ void timer_callback(TimerHandle_t xTimer) {
     motor_control_2_->update_pid(encoder_2_->get_velocity());
 }
 
+float time_now() {
+    struct timeval tv_now;
+    gettimeofday(&tv_now, NULL);
+    int64_t time_us = (int64_t)tv_now.tv_sec * 1000000L + (int64_t)tv_now.tv_usec;
+    return time_us / 1000000.0;
+}
+
+float ukf_dt = 0;
+void ukf_task(void * args) {
+    ImuData prev_imu_data = imu_->get_data();
+    float prev_wheel_lin_vel = 0;
+    float t_prev = time_now();
+    while (true) {
+        float t = time_now();
+        float dt = t - t_prev;
+        // ukf_dt = dt;
+
+        ImuData imu_data = imu_->get_data();
+        float left_wheel_vel = encoder_1_->get_velocity();
+        float right_wheel_vel = encoder_2_->get_velocity();
+
+        float t1 = time_now();
+
+        float wheel_lin_vel = (left_wheel_vel + right_wheel_vel) / 2;
+        float wheel_accel = (wheel_lin_vel - prev_wheel_lin_vel) / dt;
+        float gyro_ang_accel = (imu_data.gyro[2] - prev_imu_data.gyro[2]) / dt;
+
+        T::ControlVec controls {
+            wheel_accel,
+            gyro_ang_accel
+        };
+
+        ukf_->predict(controls, dt);
+
+        T::SensorVec sensor_data {
+            imu_data.gyro[2],
+            left_wheel_vel,
+            right_wheel_vel
+        };
+
+        ukf_->update_on_sensor_data(sensor_data);
+
+        float t2 = time_now();
+        ukf_dt = t2 - t1;
+
+        prev_imu_data = imu_data;
+        prev_wheel_lin_vel = wheel_lin_vel;
+        t_prev = t;
+    }
+}
+
+
 extern "C" void app_main() {
     flash_init();
     setup_wifi();
@@ -191,6 +248,7 @@ extern "C" void app_main() {
     motor_control_2_ = &motor_control_2;
 
     IMU imu(I2C_NUM_0, 21, 22);
+    imu_ = &imu;
 
     // Encoders encoders = {encoder_1, encoder_2, 100};
 
@@ -204,6 +262,12 @@ extern "C" void app_main() {
     }
 
     int count = 0;
+
+    UKF ukf;
+    ukf_ = &ukf;
+    // xTaskCreate(ukf_task, "ukf_task", 20480, NULL, 4, NULL);
+    // pinning task to core 1
+    xTaskCreatePinnedToCore(ukf_task, "ukf_task", 20480, NULL, 4, NULL, 1);
 
     // correçao para os motores "ruins"
     // float target = 0.5;
@@ -228,8 +292,15 @@ extern "C" void app_main() {
         // std::string msg = "encoder_1: " + std::to_string(motor_control_1.debug_var) + " encoder_2: " + std::to_string(motor_control_2.debug_var);
         //send_string_msg(BROADCAST_MAC, msg);
 
-        // std::string msg = "encoder_1: " + std::to_string(encoder_1.get_count()) + " encoder_2: " + std::to_string(encoder_2.get_count());
+        // std::string msg = "encoder1: " + std::to_string(encoder_1.get_count()) + " encoder2: " + std::to_string(encoder_2.get_count());
         // send_string_msg(BROADCAST_MAC, msg);
+
+        // std::string msg = "testmessage";
+        // send_string_msg(BROADCAST_MAC, msg);
+
+        // send ukf ang velocity and dt
+        std::string msg = "dt: " + std::to_string(ukf_dt) + " ang_vel: " + std::to_string(ukf_->x[4]);
+        send_string_msg(BROADCAST_MAC, msg);
         
         // std::string msg = "encoder_1: " + std::to_string(encoder_1.get_velocity()) + " encoder_2: " + std::to_string(encoder_2.get_velocity());
         // send_string_msg(BROADCAST_MAC, msg);
@@ -237,7 +308,7 @@ extern "C" void app_main() {
         // send gyro components
         // std::string gyro_msg = std::to_string(imu_data.gyro[0]) + "\t" + std::to_string(imu_data.gyro[1]) + "\t" + std::to_string(imu_data.gyro[2]);
         // send_string_msg(BROADCAST_MAC, gyro_msg);
-        vTaskDelay(50 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
         count++;
     }
 }

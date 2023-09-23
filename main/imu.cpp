@@ -95,15 +95,16 @@ ImuData2D IMU::read_imu_data(bool use_mag) {
 	return data;
 }
 
+// magnetometer is disabled
 ImuData IMU::get_data() {
 	ImuData data{};
 	int16_t gyro_acc_data[6], mag_data[3];
 	read_reg(addr_gyro_acc, OUTX_L_G, (uint8_t *) &gyro_acc_data, 12);
-	read_reg(addr_comp, LIS3MDL_OUT_X_L, (uint8_t *) &mag_data, 6);
+	// read_reg(addr_comp, LIS3MDL_OUT_X_L, (uint8_t *) &mag_data, 6);
 	for (int i = 0; i < 3; ++i) {
 		data.gyro[i] = gyro_acc_data[i] * (MAX_GYRO/INT16_MAX);
 		data.acc[i] = gyro_acc_data[i+3] * (MAX_ACC/INT16_MAX);
-		data.mag[i] = mag_data[i] * (MAX_MAG/INT16_MAX);
+		// data.mag[i] = mag_data[i] * (MAX_MAG/INT16_MAX);
 	}
 	return data;
 }

@@ -11,7 +11,7 @@ class Encoder {
     static constexpr int16_t PCNT_LOW_LIMIT = -100;
     static constexpr int16_t GEAR_RATIO = 75;
     static constexpr int16_t PULSES_PER_REVOLUTION = 12;
-    static constexpr float WHEEL_RADIUS = 0.06;
+    static constexpr float WHEEL_RADIUS = 0.06/2;
 
     pcnt_unit_t pcnt_unit;
     int accumu_count = 0;

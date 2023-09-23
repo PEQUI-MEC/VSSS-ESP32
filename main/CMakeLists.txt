@@ -8,6 +8,9 @@ idf_component_register(SRCS
     "motor_control.cpp"
     "encoder.cpp"
     "imu.cpp"
+    "EkfModel.cpp"
+    "UKF.cpp"
+    "Types.cpp"
     ${EIGEN_FILES}
     INCLUDE_DIRS "."
     ${EIGEN_DIRS})
