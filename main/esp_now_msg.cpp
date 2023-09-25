@@ -15,17 +15,17 @@
 #include "esp_crc.h"
 #include "esp_now_msg.h"
 
-static xQueueHandle packet_queue;
+static QueueHandle_t packet_queue;
 
-void received_callback(const uint8_t *mac_addr, const uint8_t *data, int len) {
+void received_callback(const esp_now_recv_info *info, const uint8_t *data, int len) {
     MessagePacket packet;
 
-    if (mac_addr == NULL || data == NULL || len <= 0) {
+    if (info->src_addr == NULL || data == NULL || len <= 0) {
         ESP_LOGE(TAG, "Receive cb arg error");
         return;
     }
 
-    std::copy(mac_addr, mac_addr + ESP_NOW_ETH_ALEN, packet.mac_addr.begin());
+    std::copy(info->src_addr, info->src_addr + ESP_NOW_ETH_ALEN, packet.mac_addr.begin());
     std::copy(data, data + len, packet.data.begin());
     packet.data_len = len;
 

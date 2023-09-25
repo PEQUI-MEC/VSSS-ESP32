@@ -111,7 +111,7 @@ ImuData IMU::get_data() {
 
 // Preenche o vetor data com os valores lidos do registrador, num_bytes indica quantos bytes devem ser lidos
 void IMU::read_reg(int addr, uint8_t reg, uint8_t *data, int num_bytes) {
-    ESP_ERROR_CHECK(i2c_master_write_read_device(I2C_MASTER_NUM, addr, &reg, 1, data, num_bytes, I2C_MASTER_TIMEOUT_MS / portTICK_RATE_MS));
+    ESP_ERROR_CHECK(i2c_master_write_read_device(I2C_MASTER_NUM, addr, &reg, 1, data, num_bytes, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS));
 }
 
 // Escreve em um registrador
@@ -119,6 +119,6 @@ void IMU::write_reg(int addr, uint8_t reg, uint8_t data) {
 	uint8_t cmd[2];
 	cmd[0] = reg;
 	cmd[1] = data;
-    ESP_ERROR_CHECK(i2c_master_write_to_device(I2C_MASTER_NUM, addr, cmd, sizeof(cmd), I2C_MASTER_TIMEOUT_MS / portTICK_RATE_MS));
+    ESP_ERROR_CHECK(i2c_master_write_to_device(I2C_MASTER_NUM, addr, cmd, sizeof(cmd), I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS));
 }
 
