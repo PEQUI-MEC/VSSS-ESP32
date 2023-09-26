@@ -181,21 +181,39 @@ float time_now() {
     return time_us / 1000000.0;
 }
 
+// once every tick
+static QueueHandle_t imu_queue;
+void imu_read_task(void * args) {
+    const TickType_t period = 1;
+    TickType_t last_wake_time = xTaskGetTickCount();
+    while (true) {
+        ImuData imu_data = imu_->get_data();
+        xQueueOverwrite(imu_queue, &imu_data);
+        vTaskDelayUntil(&last_wake_time, period);
+    }
+}
+
 float ukf_dt = 0;
 void ukf_task(void * args) {
-    ImuData prev_imu_data = imu_->get_data();
+    // ImuData prev_imu_data = imu_->get_data();
+    ImuData prev_imu_data = {0, 0, 0};
+
     float prev_wheel_lin_vel = 0;
     float t_prev = time_now();
     while (true) {
+        ImuData imu_data;
+        if (xQueueReceive(imu_queue, &imu_data, portMAX_DELAY) != pdTRUE) {
+            continue;
+        }
+
         float t = time_now();
         float dt = t - t_prev;
-        // ukf_dt = dt;
-
-        ImuData imu_data = imu_->get_data();
+        ukf_dt = dt;
+    
         float left_wheel_vel = encoder_1_->get_velocity();
         float right_wheel_vel = encoder_2_->get_velocity();
 
-        float t1 = time_now();
+        // float t1 = time_now();
 
         float wheel_lin_vel = (left_wheel_vel + right_wheel_vel) / 2;
         float wheel_accel = (wheel_lin_vel - prev_wheel_lin_vel) / dt;
@@ -216,8 +234,8 @@ void ukf_task(void * args) {
 
         ukf_->update_on_sensor_data(sensor_data);
 
-        float t2 = time_now();
-        ukf_dt = t2 - t1;
+        // float t2 = time_now();
+        // ukf_dt = t2 - t1;
 
         prev_imu_data = imu_data;
         prev_wheel_lin_vel = wheel_lin_vel;
@@ -232,6 +250,8 @@ extern "C" void app_main() {
     setup_espnow();
     //xTaskCreate(send_back_task, "send_back_task", 20480, NULL, 4, NULL);
     xTaskCreate(parse_message, "parse_message", 20480, NULL, 4, NULL);
+
+    imu_queue = xQueueCreate(1, sizeof(ImuData));
 
     MotorControl motor_control_1(MCPWM_UNIT_0, 32, 33);
     motor_control_1.set_duty_cycle(0);
@@ -268,6 +288,7 @@ extern "C" void app_main() {
     // xTaskCreate(ukf_task, "ukf_task", 20480, NULL, 4, NULL);
     // pinning task to core 1
     xTaskCreatePinnedToCore(ukf_task, "ukf_task", 20480, NULL, 4, NULL, 1);
+    xTaskCreate(imu_read_task, "imu_read_task", 20480, NULL, 4, NULL);
 
     // correçao para os motores "ruins"
     // float target = 0.5;
