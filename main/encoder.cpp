@@ -15,7 +15,9 @@ static void pcnt_overflow_handler(void *arg) {
     }
 }
 
-Encoder::Encoder(pcnt_unit_t pcnt_unit, uint8_t pin_a, uint8_t pin_b) : pcnt_unit(pcnt_unit) {
+Encoder::Encoder(pcnt_unit_t pcnt_unit, uint8_t pin_a, uint8_t pin_b, int multiplier)
+        : pcnt_unit(pcnt_unit),
+          multiplier(multiplier) {
     // Configure channel 0
     pcnt_config_t dev_config = {
         .pulse_gpio_num = pin_a,
@@ -69,7 +71,7 @@ float Encoder::get_velocity() {
 }
 
 void Encoder::update_velocity(float period) {
-    velocity = (float(get_count()) * 2 * M_PI * WHEEL_RADIUS) / (PULSES_PER_REVOLUTION * GEAR_RATIO * period);
+    velocity = multiplier * (float(get_count()) * 2 * M_PI * WHEEL_RADIUS) / (PULSES_PER_REVOLUTION * GEAR_RATIO * period);
     accumu_count = 0;
     pcnt_counter_clear(pcnt_unit);
 }

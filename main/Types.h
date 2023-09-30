@@ -93,6 +93,11 @@ struct SensorData {
 	}
 };
 
+struct WheelVelocity {
+	float left = 0;
+	float right = 0;
+};
+
 struct VisionData {
 	float x = 0;
 	float y = 0;

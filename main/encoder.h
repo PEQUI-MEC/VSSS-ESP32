@@ -17,7 +17,9 @@ class Encoder {
     int accumu_count = 0;
     volatile float velocity = 0;
 
-    Encoder(pcnt_unit_t pcnt_unit, uint8_t pin_a, uint8_t pin_b);
+    int multiplier = 1;
+
+    Encoder(pcnt_unit_t pcnt_unit, uint8_t pin_a, uint8_t pin_b, int multiplier);
     int get_count();
     float get_velocity();
     void update_velocity(float period);

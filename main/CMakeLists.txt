@@ -11,6 +11,7 @@ idf_component_register(SRCS
     "EkfModel.cpp"
     "UKF.cpp"
     "Types.cpp"
+    "Control.cpp"
     ${EIGEN_FILES}
     INCLUDE_DIRS "."
     ${EIGEN_DIRS})
