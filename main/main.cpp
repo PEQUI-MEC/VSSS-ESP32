@@ -126,6 +126,7 @@ float get_token(std::string &msg)
     return value;
 }
 
+static QueueHandle_t vision_queue;
 static QueueHandle_t cmd_queue;
 
 void parse_message(void * args) {
@@ -200,6 +201,12 @@ void parse_message(void * args) {
                 .uvf_n = n
             };
             xQueueOverwrite(cmd_queue, &target);
+        } else if (packet.data[0] == 'E') {
+            float x = get_token(text_data)/100.0;
+            float y = get_token(text_data)/100.0;
+            float theta = wrap(get_token(text_data) * M_PI / 180);
+            T::VisionVec vision_data = {x, y, theta};
+            xQueueOverwrite(vision_queue, &vision_data);
         }
         vTaskDelay(1);
     }
@@ -339,13 +346,18 @@ void ukf_task(void * args) {
 
         ukf_->predict(controls, dt);
 
-        T::SensorVec sensor_data {
-            imu_data.gyro[2],
-            left_wheel_vel,
-            right_wheel_vel
-        };
-
-        ukf_->update_on_sensor_data(sensor_data);
+        // update on vision data if available
+        T::VisionVec vision_data;
+        if (xQueueReceive(vision_queue, &vision_data, 0) == pdTRUE) {
+            ukf_->update_on_vision_data(vision_data);
+        } else {
+            T::SensorVec sensor_data {
+                imu_data.gyro[2],
+                left_wheel_vel,
+                right_wheel_vel
+            };
+            ukf_->update_on_sensor_data(sensor_data);
+        }
 
         Pose pose(ukf_->x);
         xQueueOverwrite(ukf_queue, &pose);
@@ -370,6 +382,7 @@ extern "C" void app_main() {
     imu_queue = xQueueCreate(1, sizeof(ImuData));
     ukf_queue = xQueueCreate(1, sizeof(Pose));
     cmd_queue = xQueueCreate(1, sizeof(Target));
+    vision_queue = xQueueCreate(1, sizeof(T::VisionVec));
 
     MotorControl right_motor_control(MCPWM_UNIT_0, 32, 33, 1);
     right_motor_control.set_duty_cycle(0);
@@ -418,6 +431,28 @@ extern "C" void app_main() {
     // correçao para os motores "ruins"
     // float target = 0.5;
     // float correction = 0.88;
+
+    auto orientation_control = [&](float theta, float velocity) {
+        Target target = {
+            .command = ControlType::ORIENTATION_CONTROL,
+            .theta = theta,
+            .velocity = velocity
+        };
+        xQueueOverwrite(cmd_queue, &target);
+    };
+
+    // wait until first ukf update
+    Pose pose;
+    xQueueReceive(ukf_queue, &pose, portMAX_DELAY);
+    int delay = 300;
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    orientation_control(45, 0.8);
+    vTaskDelay(delay / portTICK_PERIOD_MS);
+    orientation_control(0, 0.8);
+    vTaskDelay(delay / portTICK_PERIOD_MS);
+    orientation_control(-45, 0.8);
+    vTaskDelay(delay / portTICK_PERIOD_MS);
+    orientation_control(0, 0.8);
     
     while (true) {
         // if (count % 50 == 0) {
