@@ -5,7 +5,9 @@
 
 #define MOTOR_CTRL_MCPWM_TIMER MCPWM_TIMER_0
 
-MotorControl::MotorControl(mcpwm_unit_t mcpwm_unit, uint8_t pin_a, uint8_t pin_b) : mcpwm_unit(mcpwm_unit) {
+MotorControl::MotorControl(mcpwm_unit_t mcpwm_unit, uint8_t pin_a, uint8_t pin_b, int multiplier)
+        : mcpwm_unit(mcpwm_unit),
+          multiplier(multiplier) {
     // configure motor control pins
     mcpwm_gpio_init(mcpwm_unit, MCPWM0A, pin_a);
     mcpwm_gpio_init(mcpwm_unit, MCPWM0B, pin_b);
@@ -22,6 +24,7 @@ MotorControl::MotorControl(mcpwm_unit_t mcpwm_unit, uint8_t pin_a, uint8_t pin_b
 
 void MotorControl::set_duty_cycle(float duty_cycle) {
     /* motor moves in forward direction, with duty cycle = duty % */
+    duty_cycle *= multiplier;
     if (duty_cycle > 0) {
         mcpwm_set_signal_low(mcpwm_unit, MOTOR_CTRL_MCPWM_TIMER, MCPWM_OPR_A);
         mcpwm_set_duty(mcpwm_unit, MOTOR_CTRL_MCPWM_TIMER, MCPWM_OPR_B, duty_cycle);

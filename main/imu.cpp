@@ -95,22 +95,23 @@ ImuData2D IMU::read_imu_data(bool use_mag) {
 	return data;
 }
 
+// magnetometer is disabled
 ImuData IMU::get_data() {
 	ImuData data{};
 	int16_t gyro_acc_data[6], mag_data[3];
 	read_reg(addr_gyro_acc, OUTX_L_G, (uint8_t *) &gyro_acc_data, 12);
-	read_reg(addr_comp, LIS3MDL_OUT_X_L, (uint8_t *) &mag_data, 6);
+	// read_reg(addr_comp, LIS3MDL_OUT_X_L, (uint8_t *) &mag_data, 6);
 	for (int i = 0; i < 3; ++i) {
 		data.gyro[i] = gyro_acc_data[i] * (MAX_GYRO/INT16_MAX);
 		data.acc[i] = gyro_acc_data[i+3] * (MAX_ACC/INT16_MAX);
-		data.mag[i] = mag_data[i] * (MAX_MAG/INT16_MAX);
+		// data.mag[i] = mag_data[i] * (MAX_MAG/INT16_MAX);
 	}
 	return data;
 }
 
 // Preenche o vetor data com os valores lidos do registrador, num_bytes indica quantos bytes devem ser lidos
 void IMU::read_reg(int addr, uint8_t reg, uint8_t *data, int num_bytes) {
-    ESP_ERROR_CHECK(i2c_master_write_read_device(I2C_MASTER_NUM, addr, &reg, 1, data, num_bytes, I2C_MASTER_TIMEOUT_MS / portTICK_RATE_MS));
+    ESP_ERROR_CHECK(i2c_master_write_read_device(I2C_MASTER_NUM, addr, &reg, 1, data, num_bytes, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS));
 }
 
 // Escreve em um registrador
@@ -118,6 +119,6 @@ void IMU::write_reg(int addr, uint8_t reg, uint8_t data) {
 	uint8_t cmd[2];
 	cmd[0] = reg;
 	cmd[1] = data;
-    ESP_ERROR_CHECK(i2c_master_write_to_device(I2C_MASTER_NUM, addr, cmd, sizeof(cmd), I2C_MASTER_TIMEOUT_MS / portTICK_RATE_MS));
+    ESP_ERROR_CHECK(i2c_master_write_to_device(I2C_MASTER_NUM, addr, cmd, sizeof(cmd), I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS));
 }
 

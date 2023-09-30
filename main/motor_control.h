@@ -25,10 +25,12 @@ struct PID {
 class MotorControl {
     mcpwm_unit_t mcpwm_unit;
 
+    int multiplier = 1;
+
     PID pid;
     
     public:
-    MotorControl(mcpwm_unit_t mcpwm_unit, uint8_t pin_a, uint8_t pin_b);
+    MotorControl(mcpwm_unit_t mcpwm_unit, uint8_t pin_a, uint8_t pin_b, int multiplier);
     void set_duty_cycle(float duty_cycle);
     void set_pid_target_velocity(float target_velocity);
     void update_pid(float current_velocity);
