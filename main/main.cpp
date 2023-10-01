@@ -390,8 +390,8 @@ extern "C" void app_main() {
     MotorControl left_motor_control(MCPWM_UNIT_1, 19, 18, -1);
     left_motor_control.set_duty_cycle(0);
 
-    Encoder right_encoder(PCNT_UNIT_0, 25, 26, 1);
-    Encoder left_encoder(PCNT_UNIT_1, 5, 17, -1);
+    Encoder right_encoder(PCNT_UNIT_0, 25, 26, -1);
+    Encoder left_encoder(PCNT_UNIT_1, 5, 17, 1);
 
     right_encoder_ = &right_encoder;
     left_encoder_ = &left_encoder;
@@ -485,8 +485,8 @@ extern "C" void app_main() {
         // std::string msg = "x: " + std::to_string(ukf_->x[0]) + " y: " + std::to_string(ukf_->x[1]) + " theta: " + std::to_string(theta_deg);
         // send_string_msg(BROADCAST_MAC, msg);
 
-        // std::string msg = "left_vel: " + std::to_string(left_encoder_->get_velocity()) + " right_vel: " + std::to_string(right_encoder_->get_velocity());
-        // send_string_msg(BROADCAST_MAC, msg);
+        std::string msg = "left_vel: " + std::to_string(left_encoder_->get_velocity()) + " right_vel: " + std::to_string(right_encoder_->get_velocity());
+        send_string_msg(BROADCAST_MAC, msg);
         
         // std::string msg = "encoder_1: " + std::to_string(encoder_1.get_velocity()) + " encoder_2: " + std::to_string(encoder_2.get_velocity());
         // send_string_msg(BROADCAST_MAC, msg);
