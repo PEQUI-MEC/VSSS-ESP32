@@ -15,6 +15,12 @@
 #include "esp_now.h"
 #include "esp_crc.h"
 
+#include "driver/uart.h"
+#include "driver/adc.h"
+#include "esp_adc_cal.h"
+#include "driver/uart.h"
+#include "driver/adc.h"
+#include "esp_adc_cal.h"
 #include "esp_now_msg.h"
 #include "motor_control.h"
 #include "encoder.h"
@@ -26,6 +32,12 @@
 
 #include "UKF.h"
 #include "Control.h"
+
+#define BUF_SIZE (1024)
+#define VREF 1100 //reference voltage to ESP 32 ADC
+esp_adc_cal_characteristics_t adc1_chars;
+std::string battery_msg;
+
 
 // static xQueueHandle encoder_queue;
 
@@ -66,6 +78,16 @@ void flash_init() {
     }
     ESP_ERROR_CHECK(ret);
 }
+
+static void adc_init(){
+    adc1_config_width(ADC_WIDTH_BIT_12); // Set ADC precision to 12 bits
+    adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_11); // ADC1 Channel 0 (GPIO 36) with attenuation of 11 dB
+    //adc1_chars = (esp_adc_cal_characteristics_t *)calloc(1, sizeof(esp_adc_cal_characteristics_t));
+    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, VREF, &adc1_chars);
+}
+
+
+
 
 // #define MOTOR_CONTROL_TIMER_ID           TIMER_0
 // #define MOTOR_CONTROL_TIMER_GROUP        TIMER_GROUP_1
@@ -207,7 +229,16 @@ void parse_message(void * args) {
             float theta = wrap(get_token(text_data) * M_PI / 180);
             T::VisionVec vision_data = {x, y, theta};
             xQueueOverwrite(vision_queue, &vision_data);
+        } else if(packet.data[0] == 'B'){
+            uint32_t adc1_val = adc1_get_raw(ADC1_CHANNEL_0);
+            uint32_t voltage = esp_adc_cal_raw_to_voltage(adc1_val, &adc1_chars);
+            float battery_voltage = ((float)voltage *  (470.0 + 1000.0)/470000);
+            char buffer[15];
+            snprintf(buffer, sizeof(buffer), "B%0.2f", battery_voltage);
+            std::string battery_msg(buffer);
+            send_string_msg(BROADCAST_MAC, battery_msg);
         }
+
         vTaskDelay(1);
     }
 }
@@ -381,6 +412,7 @@ extern "C" void app_main() {
     flash_init();
     setup_wifi();
     setup_espnow();
+    adc_init();
     //xTaskCreate(send_back_task, "send_back_task", 20480, NULL, 4, NULL);
     xTaskCreatePinnedToCore(parse_message, "parse_message", 20480, NULL, 4, NULL, 0);
 
@@ -499,7 +531,7 @@ extern "C" void app_main() {
         // ImuData imu_data = imu.get_data();
         // send gyro components
         // std::string gyro_msg = std::to_string(imu_data.gyro[0]) + "\t" + std::to_string(imu_data.gyro[1]) + "\t" + std::to_string(imu_data.gyro[2]);
-        // send_string_msg(BROADCAST_MAC, gyro_msg);
+        //xsend_string_msg(BROADCAST_MAC, gyro_msg);
         vTaskDelay(100 / portTICK_PERIOD_MS);
         count++;
     }
