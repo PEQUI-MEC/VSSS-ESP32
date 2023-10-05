@@ -232,8 +232,10 @@ void parse_message(void * args) {
         } else if(packet.data[0] == 'B'){
             uint32_t adc1_val = adc1_get_raw(ADC1_CHANNEL_0);
             uint32_t voltage = esp_adc_cal_raw_to_voltage(adc1_val, &adc1_chars);
-            float battery_voltage = ((float)voltage *  (470.0 + 1000.0)/470);
-            battery_msg = "Battery  Level first calc: " + std::to_string(battery_voltage);
+            float battery_voltage = ((float)voltage *  (470.0 + 1000.0)/470000);
+            char buffer[15];
+            snprintf(buffer, sizeof(buffer), "B%0.2f", battery_voltage);
+            std::string battery_msg(buffer);
             send_string_msg(BROADCAST_MAC, battery_msg);
         }
 
