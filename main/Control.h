@@ -35,6 +35,8 @@ class Control {
 		float calibration_velocity = 0;
 		float gyro_scale = 0;
 
+		float last_backwards_change = 0;
+
 		Pose pose;
 
 

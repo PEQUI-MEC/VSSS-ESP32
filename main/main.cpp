@@ -236,12 +236,12 @@ void parse_message(void * args) {
 //     motor_control_2_->update_pid(encoder_2_->get_velocity());
 // }
 
-float time_now() {
-    struct timeval tv_now;
-    gettimeofday(&tv_now, NULL);
-    int64_t time_us = (int64_t)tv_now.tv_sec * 1000000L + (int64_t)tv_now.tv_usec;
-    return time_us / 1000000.0;
-}
+// float time_now() {
+//     struct timeval tv_now;
+//     gettimeofday(&tv_now, NULL);
+//     int64_t time_us = (int64_t)tv_now.tv_sec * 1000000L + (int64_t)tv_now.tv_usec;
+//     return time_us / 1000000.0;
+// }
 
 // once every tick
 static QueueHandle_t imu_queue;
@@ -316,6 +316,9 @@ void ukf_task(void * args) {
     // ImuData prev_imu_data = imu_->get_data();
     ImuData prev_imu_data = {0, 0, 0};
 
+    const TickType_t period = 1;
+    TickType_t last_wake_time = xTaskGetTickCount();
+
     float prev_wheel_lin_vel = 0;
     float t_prev = time_now();
     while (true) {
@@ -362,6 +365,8 @@ void ukf_task(void * args) {
         Pose pose(ukf_->x);
         xQueueOverwrite(ukf_queue, &pose);
 
+        vTaskDelayUntil(&last_wake_time, period);
+
         // float t2 = time_now();
         // ukf_dt = t2 - t1;
 
@@ -377,7 +382,7 @@ extern "C" void app_main() {
     setup_wifi();
     setup_espnow();
     //xTaskCreate(send_back_task, "send_back_task", 20480, NULL, 4, NULL);
-    xTaskCreate(parse_message, "parse_message", 20480, NULL, 4, NULL);
+    xTaskCreatePinnedToCore(parse_message, "parse_message", 20480, NULL, 4, NULL, 0);
 
     imu_queue = xQueueCreate(1, sizeof(ImuData));
     ukf_queue = xQueueCreate(1, sizeof(Pose));
@@ -422,11 +427,11 @@ extern "C" void app_main() {
     // xTaskCreate(ukf_task, "ukf_task", 20480, NULL, 4, NULL);
     // pinning task to core 1
     xTaskCreatePinnedToCore(ukf_task, "ukf_task", 20480, NULL, 4, NULL, 1);
-    xTaskCreate(imu_read_task, "imu_read_task", 20480, NULL, 4, NULL);
-    xTaskCreate(control_task, "control_task", 20480, NULL, 4, NULL);
+    xTaskCreatePinnedToCore(imu_read_task, "imu_read_task", 20480, NULL, 4, NULL, 0);
+    xTaskCreatePinnedToCore(control_task, "control_task", 20480, NULL, 4, NULL, 0);
 
     std::string msg = "Starting";
-    send_string_msg(BROADCAST_MAC, msg);
+    send_string_msg(RADIO_MAC, msg);
 
     // correçao para os motores "ruins"
     // float target = 0.5;
@@ -482,11 +487,12 @@ extern "C" void app_main() {
         // send ukf ang velocity and dt
         // std::string msg = "dt: " + std::to_string(ukf_dt) + " ang_vel: " + std::to_string(ukf_->x[4]);
         // float theta_deg = ukf_->x[2] * 180 / M_PI;
-        // std::string msg = "x: " + std::to_string(ukf_->x[0]) + " y: " + std::to_string(ukf_->x[1]) + " theta: " + std::to_string(theta_deg);
+        // std::string msg = "x: " + std::to_string(ukf_->x[0]) + "\t y: " + std::to_string(ukf_->x[1]) + "\t vl: " + std::to_string(left_encoder_->get_velocity()) + "\t vr: " + std::to_string(right_encoder_->get_velocity());
+        // std::string msg = "x: " + std::to_string(ukf_->x[0]) + "\t y: " + std::to_string(ukf_->x[1]);
         // send_string_msg(BROADCAST_MAC, msg);
 
-        std::string msg = "left_vel: " + std::to_string(left_encoder_->get_velocity()) + " right_vel: " + std::to_string(right_encoder_->get_velocity());
-        send_string_msg(BROADCAST_MAC, msg);
+        // std::string msg = "left_vel: " + std::to_string(left_encoder_->get_velocity()) + " right_vel: " + std::to_string(right_encoder_->get_velocity());
+        // send_string_msg(BROADCAST_MAC, msg);
         
         // std::string msg = "encoder_1: " + std::to_string(encoder_1.get_velocity()) + " encoder_2: " + std::to_string(encoder_2.get_velocity());
         // send_string_msg(BROADCAST_MAC, msg);

@@ -21,7 +21,7 @@
 
 #define ESPNOW_MAXDELAY 512
 #define MAX_RECEIVE_DATA 250
-#define ESPNOW_QUEUE_SIZE 6
+#define ESPNOW_QUEUE_SIZE 25
 #define ESPNOW_CHANNEL 1
 #define ESPNOW_PMK "pmk1234567890123"
 #define ESPNOW_LMK "lmk1234567890123"
@@ -30,7 +30,9 @@
 
 static const char *TAG = "VSSS-ESP32";
 
-static std::array<uint8_t, ESP_NOW_ETH_ALEN> BROADCAST_MAC = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+// static std::array<uint8_t, ESP_NOW_ETH_ALEN> BROADCAST_MAC = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+// ec:62:60:9d:8a:e8
+static std::array<uint8_t, ESP_NOW_ETH_ALEN> RADIO_MAC = { 0xEC, 0x62, 0x60, 0x9D, 0x8A, 0xE9 };
 
 typedef struct {
     std::array<uint8_t, ESP_NOW_ETH_ALEN> mac_addr;

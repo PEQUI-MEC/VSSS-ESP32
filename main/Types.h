@@ -16,6 +16,7 @@ inline std::string str(const T& x) {
 }
 float to_rads(float degrees);
 float wrap(float angle);
+float time_now();
 
 struct Pose {
 	float x;

@@ -58,7 +58,7 @@ WheelVelocity Control::uvf_control() {
 		}
 	}
 
-	return set_wheel_velocity_nonlinear_controller(theta_error, vel_acelerada, move_backwards);
+	return set_wheel_velocity_nonlinear_controller(theta_error, target.velocity, move_backwards);
 }
 
 WheelVelocity Control::vector_control() {
@@ -88,7 +88,7 @@ WheelVelocity Control::vector_control() {
 		}
 	}
 
-	return set_wheel_velocity_nonlinear_controller(theta_error, vel_acelerada, move_backwards);
+	return set_wheel_velocity_nonlinear_controller(theta_error, target.velocity, move_backwards);
 }
 
 WheelVelocity Control::position_control() {
@@ -127,7 +127,7 @@ WheelVelocity Control::position_control() {
 		}
 	}
 
-	return set_wheel_velocity_nonlinear_controller(theta_error, vel_acelerada * std::tanh(18 * position_error), move_backwards);
+	return set_wheel_velocity_nonlinear_controller(theta_error, target.velocity * std::tanh(18 * position_error), move_backwards);
 }
 
 WheelVelocity scale_velocity(float left, float right, float scale) {
@@ -255,16 +255,18 @@ void Control::set_max_theta_error(float error) {
 }
 
 bool Control::backwards_select(float target, float orientation) {
-	return false;
-	// if(backwards_timer.read_ms() > 25) {
-	// 	bool backwards = std::abs(round_angle(target - orientation)) > PI/2;
-	// 	if(previously_backwards != backwards) {
-	// 		backwards_timer.reset();
-	// 		vel_acelerada = 0.3;
-	// 	}
-	// 	previously_backwards = backwards;
-	// 	return backwards;
-	// } else {
-	// 	return previously_backwards;
-	// }
+	// return false;
+	float now = time_now();
+	float time_since_change = now - last_backwards_change;
+	if(time_since_change > 25.0 * 0.001) {
+		bool backwards = std::abs(round_angle(target - orientation)) > PI/2;
+		if(previously_backwards != backwards) {
+			last_backwards_change = now;
+			vel_acelerada = 0.3;
+		}
+		previously_backwards = backwards;
+		return backwards;
+	} else {
+		return previously_backwards;
+	}
 }

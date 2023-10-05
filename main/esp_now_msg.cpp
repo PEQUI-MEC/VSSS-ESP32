@@ -30,7 +30,7 @@ void received_callback(const esp_now_recv_info *info, const uint8_t *data, int l
     packet.data_len = len;
 
     if (xQueueSend(packet_queue, &packet, ESPNOW_MAXDELAY) != pdTRUE) {
-        ESP_LOGW(TAG, "Send receive queue fail");
+        // ESP_LOGW(TAG, "Send receive queue fail");
     }
 }
 
@@ -88,5 +88,5 @@ void setup_espnow() {
     ESP_ERROR_CHECK(esp_now_register_recv_cb(received_callback));
     /* Set primary master key. */
     ESP_ERROR_CHECK(esp_now_set_pmk((uint8_t *) ESPNOW_PMK));
-    add_peer(BROADCAST_MAC);
+    add_peer(RADIO_MAC);
 }

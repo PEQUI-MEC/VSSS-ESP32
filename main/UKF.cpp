@@ -109,13 +109,13 @@ void UKF::update_on_vision_data(const T::VisionVec &data) {
 	T::KVisionMat K_GAIN = COV_XY * COV_YY.inverse();
 	T::VisionVec error = data - y_predicted;
 
-	x_error = error(0, 0);
-	y_error = error(1, 0);
-	theta_error = wrap(error(2, 0));
-	new_log = true;
+	// x_error = error(0, 0);
+	// y_error = error(1, 0);
+	// theta_error = wrap(error(2, 0));
+	// new_log = true;
 
 	error(2, 0) = wrap(error(2, 0));
-	error(3, 0) = wrap(error(3, 0));
+	// error(3, 0) = wrap(error(3, 0));
 	x = x + K_GAIN * error;
 	COV = COV - K_GAIN * COV_YY * K_GAIN.transpose();
 }

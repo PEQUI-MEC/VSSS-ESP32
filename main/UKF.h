@@ -12,11 +12,6 @@ class UKF {
 	T::PoseMat COV{};
 	T::UKFSigmaMat X{};
 
-	bool new_log = false;
-	float x_error = 0;
-	float y_error = 0;
-	float theta_error = 0;
-
 	static constexpr float alpha = 1.5;
 	static constexpr float k = 0;
 	static constexpr int L = 5;
