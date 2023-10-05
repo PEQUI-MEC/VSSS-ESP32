@@ -236,7 +236,7 @@ void parse_message(void * args) {
             char buffer[15];
             snprintf(buffer, sizeof(buffer), "B%0.2f", battery_voltage);
             std::string battery_msg(buffer);
-            send_string_msg(BROADCAST_MAC, battery_msg);
+            send_string_msg(RADIO_MAC, battery_msg);
         }
 
         vTaskDelay(1);
