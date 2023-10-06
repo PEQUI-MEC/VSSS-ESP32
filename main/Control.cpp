@@ -1,5 +1,6 @@
 #include <cmath>
 #include "Control.h"
+#include "Types.h"
 
 #define PI 3.1415926f
 #define ROBOT_LOOP_MS 10

@@ -13,8 +13,8 @@ struct PID {
     // float kp = 0.9;
     // float ki = 0.0481;
     // float kd = 0.25;
-    float kp = 1.26 * 2;
-    float ki = 0.0481 * 2;
+    float kp = 1.26;
+    float ki = 0.0481;
     float kd = 0;
     float target_velocity = 0;
     float error_sum = 0;

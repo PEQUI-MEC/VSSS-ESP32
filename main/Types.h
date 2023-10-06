@@ -10,6 +10,8 @@ constexpr int SENSOR_SIZE = 3;
 constexpr int VISION_SIZE = 3;
 constexpr int CONTROL_SIZE = 2;
 
+constexpr bool NEW_ROBOT = true;
+
 template <typename T>
 inline std::string str(const T& x) {
 	return std::to_string(x);

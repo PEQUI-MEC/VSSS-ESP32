@@ -32,6 +32,7 @@
 
 #include "UKF.h"
 #include "Control.h"
+#include "Types.h"
 
 #define BUF_SIZE (1024)
 #define VREF 1100 //reference voltage to ESP 32 ADC
@@ -427,8 +428,9 @@ extern "C" void app_main() {
     MotorControl left_motor_control(MCPWM_UNIT_1, 19, 18, -1);
     left_motor_control.set_duty_cycle(0);
 
-    Encoder right_encoder(PCNT_UNIT_0, 25, 26, -1);
-    Encoder left_encoder(PCNT_UNIT_1, 5, 17, 1);
+    float enc_multiplier = NEW_ROBOT ? 1 : -1;
+    Encoder right_encoder(PCNT_UNIT_0, 25, 26, -1 * enc_multiplier);
+    Encoder left_encoder(PCNT_UNIT_1, 5, 17, 1 * enc_multiplier);
 
     right_encoder_ = &right_encoder;
     left_encoder_ = &left_encoder;

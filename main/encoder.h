@@ -3,13 +3,14 @@
 
 #include "driver/pcnt.h"
 #include "hal/pcnt_hal.h"
+#include "Types.h"
 
 class Encoder {
     public:
 
     static constexpr int16_t PCNT_HIGH_LIMIT = 100;
     static constexpr int16_t PCNT_LOW_LIMIT = -100;
-    static constexpr int16_t GEAR_RATIO = 30;
+    static constexpr int16_t GEAR_RATIO = NEW_ROBOT ? 30 : 75;
     static constexpr int16_t PULSES_PER_REVOLUTION = 12;
     static constexpr float WHEEL_RADIUS = 0.06/2;
 

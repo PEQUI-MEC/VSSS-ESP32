@@ -2,6 +2,7 @@
 #include "motor_control.h"
 #include "driver/mcpwm.h"
 #include "driver/pcnt.h"
+#include "Types.h"
 
 #define MOTOR_CTRL_MCPWM_TIMER MCPWM_TIMER_0
 
@@ -20,6 +21,12 @@ MotorControl::MotorControl(mcpwm_unit_t mcpwm_unit, uint8_t pin_a, uint8_t pin_b
     pwm_config.counter_mode = MCPWM_UP_COUNTER;         //up counting mode
     pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
     mcpwm_init(mcpwm_unit, MOTOR_CTRL_MCPWM_TIMER, &pwm_config);    //Configure PWM0A & PWM0B with above settings
+
+    if (NEW_ROBOT) {
+        pid.kd = 2 * pid.kd;
+        pid.ki = 2 * pid.ki;
+        pid.kp = 2 * pid.kp;
+    }
 }
 
 void MotorControl::set_duty_cycle(float duty_cycle) {
