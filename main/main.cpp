@@ -27,6 +27,7 @@
 #include "imu.h"
 #include "driver/timer.h"
 #include "freertos/timers.h"
+#include "esp_mac.h"
 
 #include "math.h"
 
@@ -38,6 +39,8 @@
 #define VREF 1100 //reference voltage to ESP 32 ADC
 esp_adc_cal_characteristics_t adc1_chars;
 std::string battery_msg;
+
+static char ROBOT_ID = 'U';
 
 
 // static xQueueHandle encoder_queue;
@@ -157,8 +160,6 @@ void parse_message(void * args) {
         MessagePacket packet;
         read_msg_queue(packet);
 
-        // Set last byte to 0 to be sure it is a null terminated string
-        packet.data[packet.data_len] = '\0';
         // Create C++ string from byte array
         std::string text(packet.data.begin(), packet.data.begin() + packet.data_len);
 
@@ -414,6 +415,16 @@ extern "C" void app_main() {
     setup_wifi();
     setup_espnow();
     adc_init();
+
+    std::array<uint8_t, ESP_NOW_ETH_ALEN> robot_mac;
+    esp_read_mac(robot_mac.data(), ESP_MAC_WIFI_SOFTAP);
+
+    for (auto& [id, mac] : ROBOT_MACS) {
+        if (mac == robot_mac) {
+            ROBOT_ID = id;
+        }
+    }
+
     //xTaskCreate(send_back_task, "send_back_task", 20480, NULL, 4, NULL);
     xTaskCreatePinnedToCore(parse_message, "parse_message", 20480, NULL, 4, NULL, 0);
 
@@ -464,7 +475,7 @@ extern "C" void app_main() {
     xTaskCreatePinnedToCore(imu_read_task, "imu_read_task", 20480, NULL, 4, NULL, 0);
     xTaskCreatePinnedToCore(control_task, "control_task", 20480, NULL, 4, NULL, 0);
 
-    std::string msg = "Starting";
+    std::string msg = " Starting, my ID is " + std::string(1, ROBOT_ID);
     send_string_msg(RADIO_MAC, msg);
 
     // correçao para os motores "ruins"

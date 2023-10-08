@@ -21,7 +21,12 @@ void received_callback(const esp_now_recv_info *info, const uint8_t *data, int l
     MessagePacket packet;
 
     if (info->src_addr == NULL || data == NULL || len <= 0) {
-        ESP_LOGE(TAG, "Receive cb arg error");
+        // ESP_LOGE(TAG, "Receive cb arg error");
+        return;
+    }
+    
+    // only accept messages from RADIO_MAC
+    if (std::equal(info->src_addr, info->src_addr + ESP_NOW_ETH_ALEN, RADIO_MAC.begin()) == false) {
         return;
     }
 
@@ -38,7 +43,7 @@ void send_msg(std::array<uint8_t, ESP_NOW_ETH_ALEN>& mac, std::array<uint8_t, MA
     ESP_ERROR_CHECK(esp_now_send(mac.data(), data.data(), len));
 }
 
-void send_string_msg(std::array<uint8_t, ESP_NOW_ETH_ALEN>& mac, std::string& data) {
+void send_string_msg(std::array<uint8_t, ESP_NOW_ETH_ALEN>& mac, const std::string& data) {
     std::array<uint8_t, MAX_RECEIVE_DATA> data_array;
     std::copy(data.begin(), data.end(), data_array.begin());
     send_msg(mac, data_array, data.length());
