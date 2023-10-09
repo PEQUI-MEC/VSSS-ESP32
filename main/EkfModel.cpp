@@ -55,7 +55,7 @@ T::VisionVec EkfModel::vision_measurement_error(const T::PoseVec &x, const T::Vi
 
 T::VisionVec EkfModel::vision_measurement_model(const T::PoseVec &x) {
 	T::VisionVec z;
-	for (int i = 0; i < 2; ++i) {
+	for (int i = 0; i < 3; ++i) {
 		z(i,0) = x(i,0);
 	}
 	return z;
