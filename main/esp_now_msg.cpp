@@ -20,7 +20,7 @@ static QueueHandle_t packet_queue;
 void received_callback(const esp_now_recv_info *info, const uint8_t *data, int len) {
     MessagePacket packet;
 
-    if (info->src_addr == NULL || data == NULL || len <= 0) {
+    if (info->src_addr == NULL || data == NULL || len < 2) {
         // ESP_LOGE(TAG, "Receive cb arg error");
         return;
     }
@@ -30,9 +30,14 @@ void received_callback(const esp_now_recv_info *info, const uint8_t *data, int l
         return;
     }
 
+    char id = (char) data[0];
+    if (id != ROBOT_ID && id != 'X') {
+        return;
+    }
+
     std::copy(info->src_addr, info->src_addr + ESP_NOW_ETH_ALEN, packet.mac_addr.begin());
-    std::copy(data, data + len, packet.data.begin());
-    packet.data_len = len;
+    std::copy(data + 2, data + len, packet.data.begin());
+    packet.data_len = len - 2;
 
     if (xQueueSend(packet_queue, &packet, ESPNOW_MAXDELAY) != pdTRUE) {
         // ESP_LOGW(TAG, "Send receive queue fail");

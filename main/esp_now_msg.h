@@ -31,6 +31,8 @@
 
 static const char *TAG = "VSSS-ESP32";
 
+static char ROBOT_ID = 'U';
+
 // static std::array<uint8_t, ESP_NOW_ETH_ALEN> BROADCAST_MAC = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 // ec:62:60:9d:8a:e8
 static std::array<uint8_t, ESP_NOW_ETH_ALEN> RADIO_MAC = { 0xEC, 0x62, 0x60, 0x9D, 0x8A, 0xE9 };
