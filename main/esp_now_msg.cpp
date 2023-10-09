@@ -17,6 +17,8 @@
 
 static QueueHandle_t packet_queue;
 
+extern char ROBOT_ID;
+
 void received_callback(const esp_now_recv_info *info, const uint8_t *data, int len) {
     MessagePacket packet;
 
@@ -45,7 +47,7 @@ void received_callback(const esp_now_recv_info *info, const uint8_t *data, int l
 }
 
 void send_msg(std::array<uint8_t, ESP_NOW_ETH_ALEN>& mac, std::array<uint8_t, MAX_RECEIVE_DATA>& data, int len) {
-    ESP_ERROR_CHECK(esp_now_send(mac.data(), data.data(), len));
+    esp_now_send(mac.data(), data.data(), len);
 }
 
 void send_string_msg(std::array<uint8_t, ESP_NOW_ETH_ALEN>& mac, const std::string& data) {
@@ -81,6 +83,10 @@ void add_peer(std::array<uint8_t, ESP_NOW_ETH_ALEN>& mac) {
         memcpy(peer.lmk, ESPNOW_LMK, ESP_NOW_KEY_LEN);
         memcpy(peer.peer_addr, mac.data(), ESP_NOW_ETH_ALEN);
         ESP_ERROR_CHECK(esp_now_add_peer(&peer));
+        esp_now_rate_config_t rate = {
+            .rate = WIFI_PHY_RATE_54M
+        };
+        esp_now_set_peer_rate_config(peer.peer_addr, &rate);
     }
 }
 
@@ -99,4 +105,5 @@ void setup_espnow() {
     /* Set primary master key. */
     ESP_ERROR_CHECK(esp_now_set_pmk((uint8_t *) ESPNOW_PMK));
     add_peer(RADIO_MAC);
+    add_peer(BROADCAST_MAC);
 }

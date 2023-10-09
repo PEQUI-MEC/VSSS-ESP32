@@ -40,6 +40,8 @@
 esp_adc_cal_characteristics_t adc1_chars;
 std::string battery_msg;
 
+char ROBOT_ID = 'U';
+
 // static xQueueHandle encoder_queue;
 
 // struct EncoderPacket {
