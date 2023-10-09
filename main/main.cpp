@@ -239,6 +239,8 @@ void parse_message(void * args) {
             snprintf(buffer, sizeof(buffer), "B%0.2f", battery_voltage);
             std::string battery_msg(buffer);
             send_string_msg(RADIO_MAC, battery_msg);
+        } else if (packet.data[0] == 'T') {
+            send_string_msg(RADIO_MAC, text);
         }
 
         vTaskDelay(1);
@@ -503,6 +505,13 @@ extern "C" void app_main() {
     orientation_control(-45, 0.8);
     vTaskDelay(delay / portTICK_PERIOD_MS);
     orientation_control(0, 0.8);
+    vTaskDelay(delay / portTICK_PERIOD_MS);
+
+    Target target = {
+        .command = ControlType::WHEEL_VELOCITY_CONTROL,
+        .wheel_velocity = {0, 0}
+    };
+    xQueueOverwrite(cmd_queue, &target);
     
     while (true) {
         // if (count % 50 == 0) {
