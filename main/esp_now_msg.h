@@ -33,7 +33,7 @@ static const char *TAG = "VSSS-ESP32";
 
 // static std::array<uint8_t, ESP_NOW_ETH_ALEN> BROADCAST_MAC = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 // ec:62:60:9d:8a:e8
-static std::array<uint8_t, ESP_NOW_ETH_ALEN> RADIO_MAC = { 0xEC, 0x62, 0x60, 0x9D, 0x8A, 0xE9 };
+static std::array<uint8_t, ESP_NOW_ETH_ALEN> RADIO_MAC = { 0xEC, 0x62, 0x60, 0x9D, 0x8A, 0xE8 };
 
 static std::unordered_map<char, std::array<uint8_t, ESP_NOW_ETH_ALEN>> ROBOT_MACS = {
     {'A', {0x70, 0xB8, 0xF6, 0x5B, 0xF7, 0xC1}},

@@ -63,6 +63,8 @@ void setup_wifi() {
     ESP_ERROR_CHECK(esp_wifi_init(&cfg) );
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     ESP_ERROR_CHECK(esp_wifi_set_mode(ESPNOW_WIFI_MODE));
+    ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
+    ESP_ERROR_CHECK(esp_wifi_set_protocol(ESPNOW_WIFI_IF, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N));
     ESP_ERROR_CHECK(esp_wifi_start());
 }
 
@@ -76,6 +78,11 @@ void add_peer(std::array<uint8_t, ESP_NOW_ETH_ALEN>& mac) {
         memcpy(peer.lmk, ESPNOW_LMK, ESP_NOW_KEY_LEN);
         memcpy(peer.peer_addr, mac.data(), ESP_NOW_ETH_ALEN);
         ESP_ERROR_CHECK(esp_now_add_peer(&peer));
+        esp_now_rate_config_t rate = {
+            .phymode = WIFI_PHY_MODE_HT40,
+            .rate = WIFI_PHY_RATE_11M_S
+        };
+        esp_now_set_peer_rate_config(peer.peer_addr, &rate);
     }
 }
 
