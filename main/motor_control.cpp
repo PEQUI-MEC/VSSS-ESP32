@@ -58,5 +58,11 @@ void MotorControl::update_pid(float current_velocity) {
     pid.prev_error = error;
     float duty_cycle = pid.kp * error + pid.ki * pid.error_sum + pid.kd * error_diff;
     // parameters adjusted for duty cycle between -1 and 1
-    set_duty_cycle(duty_cycle * 100);
+    if (pid.target_velocity == 0) {
+        set_duty_cycle(0);
+        pid.error_sum = 0;
+        pid.prev_error = 0;
+    } else {
+        set_duty_cycle(duty_cycle * 100);
+    }
 }
