@@ -128,7 +128,7 @@ WheelVelocity Control::position_control() {
 		}
 	}
 
-	return set_wheel_velocity_nonlinear_controller(theta_error, target.velocity * std::tanh(5 * position_error), move_backwards);
+	return set_wheel_velocity_nonlinear_controller(theta_error, target.velocity * std::tanh(10 * position_error), move_backwards);
 }
 
 WheelVelocity scale_velocity(float left, float right, float scale) {

@@ -88,7 +88,7 @@ class Control {
 	public:
 		float max_theta_error;
 		float acc_rate;
-		float kgz;
+		float kgz = 1;
 		int msg_timeout_limit;
 		char MY_ID;
 
